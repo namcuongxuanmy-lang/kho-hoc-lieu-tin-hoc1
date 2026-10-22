@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /resources/{resourceId} {
+      allow read: if true;
+      allow delete: if request.auth != null && request.auth.uid == "THAY_UID_ADMIN";
+      allow create, update: if request.auth != null
+        && request.auth.uid == "THAY_UID_ADMIN"
+        && (
+          request.resource.data.keys().hasOnly(['id','title','url','grade','category','topic','description','createdAt'])
+          && request.resource.data.id == resourceId
+          && request.resource.data.title is string
+          && request.resource.data.title.size() > 0
+          && request.resource.data.title.size() <= 120
+          && request.resource.data.url is string
+          && request.resource.data.url.matches('https?://.+')
+          && request.resource.data.grade in ['3','4','5','6','7','8','9','other']
+          && request.resource.data.category in ['Bài giảng','Video','Trò chơi','Phần mềm','Đề kiểm tra','Tài liệu']
+          && request.resource.data.topic is string
+          && request.resource.data.topic.size() <= 80
+          && request.resource.data.description is string
+          && request.resource.data.description.size() <= 500
+          && request.resource.data.createdAt is number
+        );
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
